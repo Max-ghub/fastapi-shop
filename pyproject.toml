@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "fastapi-shop"
+version = "0.1.0"
+description = "REST API shop (catalog, cart, orders, users)"
+authors = ["Max <max_artyukhin@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.121.0"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
+pydantic = "^2.12.3"
+orjson = "^3.11.4"
+httpx = {extras = ["http2"], version = "^0.28.1"}
+pydantic-settings = "^2.11.0"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.44"}
+asyncpg = "^0.30.0"
+alembic = "^1.17.1"
+redis = {extras = ["asyncio"], version = "^7.0.1"}
+fastapi-cache2 = "^0.2.2"
+celery = "^5.5.3"
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+minio = "^7.2.18"
+structlog = "^25.5.0"
+prometheus-fastapi-instrumentator = "^7.1.0"
+sentry-sdk = "^2.43.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2"
+pytest-asyncio = "^1.2.0"
+pytest-cov = "^7.0.0"
+testcontainers = {extras = ["postgresql", "rabbitmq", "redis"], version = "^4.13.2"}
+faker = "^37.12.0"
+ruff = "^0.14.3"
+black = "^25.9.0"
+mypy = "^1.18.2"
+pre-commit = "^4.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+skip-string-normalization = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = ["build", "dist", ".venv", "__pycache__", "venv", ".mypy_cache"]
+select = ["E", "F", "W", "C", "B", "SIM", "I"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+combine_as_imports = true
+
+[tool.mypy]
+python_version = 3.12
+strict = true
+ignore_missing_imports = true
+exclude = "tests|.venv|venv"
