@@ -1,6 +1,5 @@
 from typing import Literal
 
-from pydantic import AnyUrl, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -18,13 +17,13 @@ class Settings(BaseSettings):
     log_level: Literal["debug", "info", "warning", "error"] = "info"
 
     # DSN
-    database_dsn: AnyUrl
-    redis_dsn: RedisDsn
-    rabbitmq_dsn: AnyUrl
-    minio_dsn: AnyUrl
-    celery_broker_dsn: AnyUrl
-    celery_result_dsn: AnyUrl
-    sentry_dsn: AnyUrl | None = None
+    database_dsn: str
+    redis_dsn: str
+    rabbitmq_dsn: str
+    minio_dsn: str
+    celery_broker_dsn: str
+    celery_result_dsn: str
+    sentry_dsn: str | None = None
 
     # JWT
     jwt_secret: str
