@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+
+from app.api.routers.auth import router as auth_router
 from app.core.config import settings
 from app.core.metrics import setup_metrics
 app = FastAPI(default_response_class=ORJSONResponse)
+app.include_router(router=auth_router)
 
 @app.get("/health")
 async def health():
