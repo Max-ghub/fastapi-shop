@@ -12,7 +12,7 @@ class Product(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    description: Mapped[str] = mapped_column(String(255), nullable=True)
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
     price_amount: Mapped[int] = mapped_column(Integer(), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="RUB")
     stock: Mapped[int] = mapped_column(Integer(), nullable=False, default=0)
