@@ -1,73 +1,48 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.api.deps import get_current_user, get_user_by_email, create_user
-from app.core.db import get_session
-from app.core.security import create_access_token, verify_password
+from app.api.depends import CurrentUserDep, SessionDep
+from app.core.security import create_access_token
 from app.models import User
 from app.schemas.auth import Token
-from app.schemas.users import UserCreate, UserRead
+from app.schemas.users import UserCreate, UserIn, UserOut
+from app.services.users import (
+    create_user,
+    ensure_password_valid,
+    ensure_user_credentials_unique,
+    get_user_by_email,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 @router.post(
-    "/register",
-    response_model=UserRead,
-    status_code=status.HTTP_201_CREATED
+    path="/register", response_model=UserOut, status_code=status.HTTP_201_CREATED
 )
-async def register(
-        user_in: UserCreate,
-        session: AsyncSession = Depends(get_session),
-):
-    existing_email = await get_user_by_email(str(user_in.email), session)
-    if existing_email is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
+async def register(user_create: UserCreate, session: SessionDep) -> User:
+    user_in = UserIn(**user_create.model_dump())
+    await ensure_user_credentials_unique(user_in, session)
 
-    stmt = select(User).where(User.username == user_in.username)
-    existing_username = await session.scalar(stmt)
-    if existing_username is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already taken",
-        )
-
-    user: User = await create_user(user_in=user_in, session=session)
+    user = await create_user(user_create, session)
     return user
 
-@router.post("/login", response_model=Token)
-async def login(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        session: AsyncSession = Depends(get_session),
-):
-    stmt = select(User).where(User.email == form_data.username)
-    user: User | None = await session.scalar(stmt)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email or password is invalid"
-        )
 
-    if not verify_password(
-            plain_password=form_data.password,
-            password_hash=user.password_hash
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email or password is invalid"
-        )
+@router.post(path="/login", response_model=Token)
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    session: SessionDep,
+) -> Token:
+    user = await get_user_by_email(form_data.username, session)
+    ensure_password_valid(form_data.password, user.password_hash)
 
     access_token = create_access_token(user_id=user.id, role=user.role)
     return Token(access_token=access_token, token_type="bearer")
 
-@router.get("/me", response_model=UserRead)
-async def me(current_user = Depends(get_current_user)):
+
+@router.get(path="/me", response_model=UserOut)
+async def me(current_user: CurrentUserDep) -> User:
     return current_user

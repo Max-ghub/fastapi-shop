@@ -1,10 +1,10 @@
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy.engine import Connection
 
-from app.core.db import Base, get_engine
-from app import models # noqa: F401
+from alembic import context
+from app import models  # noqa: F401
+from app.db.db import Base, get_engine
 
 config = context.config
 

@@ -9,6 +9,7 @@ class CategoryRead(BaseModel):
     slug: str
     parent_id: int | None
 
+
 class CategoryCreate(BaseModel):
     name: str
     slug: str

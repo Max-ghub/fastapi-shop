@@ -51,7 +51,7 @@ skip-string-normalization = true
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-exclude = ["build", "dist", ".venv", "__pycache__", "venv", ".mypy_cache"]
+exclude = ["build", "dist", ".venv", "__pycache__", "venv", ".mypy_cache", "alembic"]
 select = ["E", "F", "W", "C", "B", "SIM", "I"]
 
 [tool.isort]
@@ -60,7 +60,13 @@ line_length = 88
 combine_as_imports = true
 
 [tool.mypy]
-python_version = 3.12
+python_version = "3.12"
 strict = true
 ignore_missing_imports = true
-exclude = "tests|.venv|venv"
+disallow_untyped_decorators = false
+warn_return_any = false
+exclude = ["tests", ".venv", "venv"]
+
+[[tool.mypy.overrides]]
+module = ["alembic.*"]
+ignore_errors = true

@@ -1,7 +1,7 @@
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base
+from app.db import Base
 
 
 class Category(Base):
@@ -11,6 +11,5 @@ class Category(Base):
     name: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     parent_id: Mapped[int | None] = mapped_column(
-        ForeignKey("categories.id", ondelete="SET NULL"),
-        nullable=True
+        ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
     )

@@ -1,37 +1,43 @@
+from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi_cache.decorator import cache
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 from starlette import status
 
-from app.api.deps import get_current_user, get_current_admin
-from app.core.cache import make_query_key_builder, make_path_key_builder, invalidate_list, invalidate_item
-from app.core.db import get_session
-from app.models import Product
-from app.schemas.products import ProductRead, ProductCreate, ProductUpdate
+from app.api.depends import AdminUserDep, CurrentUserDep, SessionDep
+from app.core.cache import (
+    invalidate_item,
+    invalidate_list,
+    make_path_key_builder,
+    make_query_key_builder,
+)
+from app.core.config import settings
+from app.core.minio import get_minio_client
+from app.models import Product, ProductImage
+from app.schemas.product_image import ProductImageRead
+from app.schemas.products import ProductCreate, ProductRead, ProductUpdate
 
 router = APIRouter(prefix="/products", tags=["products"])
 
 products_list_key_builder = make_query_key_builder("products:list")
-product_detail_key_builder = make_path_key_builder("products:item", "product_id_or_slug")
-
-@router.get(
-    "",
-    response_model=list[ProductRead],
-    status_code=status.HTTP_200_OK
+product_detail_key_builder = make_path_key_builder(
+    "products:item", "product_id_or_slug"
 )
+
+
+@router.get("", response_model=list[ProductRead], status_code=status.HTTP_200_OK)
 @cache(expire=30, key_builder=products_list_key_builder)
 async def get_products(
+    current_user: CurrentUserDep,
     request: Request,
+    session: SessionDep,
     search: Annotated[str | None, Query(min_length=1)] = None,
     category_id: int | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 10,
     offset: Annotated[int, Query(ge=0)] = 0,
-    current_user = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
+) -> list[Product]:
     stmt = select(Product)
 
     if category_id is not None:
@@ -44,8 +50,9 @@ async def get_products(
 
     stmt = stmt.offset(offset).limit(limit)
     result = await session.scalars(stmt)
-    products = result.all()
+    products = list(result.all())
     return products
+
 
 @router.get(
     "/{product_id_or_slug}",
@@ -54,11 +61,11 @@ async def get_products(
 )
 @cache(expire=60, key_builder=product_detail_key_builder)
 async def get_product(
-        request: Request,
-        product_id_or_slug: str,
-        current_user = Depends(get_current_user),
-        session: AsyncSession = Depends(get_session),
-):
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    request: Request,
+    product_id_or_slug: str,
+) -> Product:
     stmt = select(Product)
 
     if product_id_or_slug.isdigit():
@@ -72,8 +79,8 @@ async def get_product(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not found",
         )
-
     return product
+
 
 @router.post(
     "",
@@ -81,30 +88,29 @@ async def get_product(
     response_model=ProductRead,
 )
 async def create_product(
-        product: ProductCreate,
-        current_user = Depends(get_current_admin),
-        session: AsyncSession = Depends(get_session),
-):
+    admin_user: AdminUserDep,
+    session: SessionDep,
+    product: ProductCreate,
+) -> Product:
     db_product = Product(**product.model_dump())
+
     session.add(db_product)
     await session.commit()
     await session.refresh(db_product)
-
     await invalidate_list("products")
 
     return db_product
 
-@router.patch(
-    "/{product_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=ProductRead
+
+@router.post(
+    "/{product_id}", status_code=status.HTTP_200_OK, response_model=ProductRead
 )
 async def update_product(
+    admin_user: AdminUserDep,
+    session: SessionDep,
     product_id: int,
     product: ProductUpdate,
-    current_user = Depends(get_current_admin),
-    session: AsyncSession = Depends(get_session),
-):
+) -> Product:
     stmt = select(Product).where(Product.id == product_id)
     db_product = await session.scalar(stmt)
 
@@ -121,8 +127,49 @@ async def update_product(
 
     await session.commit()
     await session.refresh(db_product)
-
     await invalidate_list("products")
     await invalidate_item("products", product_id, old_slug, db_product.slug)
 
     return db_product
+
+
+@router.get(
+    path="/{product_id}/images",
+    response_model=list[ProductImageRead],
+    status_code=status.HTTP_200_OK,
+)
+async def get_product_image_url(
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    product_id: int,
+) -> list[ProductImageRead]:
+    product = await session.scalar(select(Product).where(Product.id == product_id))
+    if product is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
+        )
+
+    result = await session.execute(
+        select(ProductImage).where(ProductImage.product_id == product_id)
+    )
+    images = result.scalars().all()
+
+    client = get_minio_client()
+    response = []
+    for image in images:
+        url = client.presigned_get_object(
+            bucket_name=settings.minio_bucket_name,
+            object_name=image.object_key,
+            expires=timedelta(minutes=10),
+        )
+
+        response.append(
+            ProductImageRead(
+                id=image.id,
+                object_key=image.object_key,
+                is_main=image.is_main,
+                url=url,
+            )
+        )
+
+    return response

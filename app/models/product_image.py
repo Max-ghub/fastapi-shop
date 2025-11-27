@@ -1,7 +1,7 @@
-from sqlalchemy import ForeignKey, String, Boolean
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base
+from app.db import Base
 
 
 class ProductImage(Base):
@@ -9,8 +9,7 @@ class ProductImage(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int | None] = mapped_column(
-        ForeignKey("products.id", ondelete="SET NULL"),
-        nullable=True
+        ForeignKey("products.id", ondelete="SET NULL"), nullable=True
     )
     object_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     is_main: Mapped[bool] = mapped_column(Boolean(), nullable=False)

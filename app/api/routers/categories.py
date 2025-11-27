@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.api.deps import get_current_user, get_current_admin
-from app.core.db import get_session
+from app.api.depends import AdminUserDep, CurrentUserDep, SessionDep
 from app.models import Category
-from app.schemas.categories import CategoryRead, CategoryCreate
+from app.schemas.categories import CategoryCreate, CategoryRead
 
 router = APIRouter(prefix="/categories", tags=["categories"])
+
 
 @router.get(
     "",
@@ -16,14 +15,14 @@ router = APIRouter(prefix="/categories", tags=["categories"])
     status_code=status.HTTP_200_OK,
 )
 async def read_categories(
-    current_user = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
+    current_user: CurrentUserDep,
+    session: SessionDep,
+) -> list[Category]:
     stmt = select(Category)
     result = await session.scalars(stmt)
-    categories = result.all()
-
+    categories = list(result.all())
     return categories
+
 
 @router.post(
     "",
@@ -31,10 +30,10 @@ async def read_categories(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_category(
+    admin_user: AdminUserDep,
+    session: SessionDep,
     category: CategoryCreate,
-    current_user = Depends(get_current_admin),
-    session: AsyncSession = Depends(get_session),
-):
+) -> Category:
     db_category = Category(**category.model_dump())
     session.add(db_category)
     await session.commit()

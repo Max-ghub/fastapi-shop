@@ -14,6 +14,7 @@ class ProductRead(BaseModel):
     is_active: bool
     category_id: int | None
 
+
 class ProductCreate(BaseModel):
     name: str
     slug: str
@@ -23,6 +24,7 @@ class ProductCreate(BaseModel):
     stock: int
     is_active: bool
     category_id: int | None
+
 
 class ProductUpdate(BaseModel):
     name: str | None = None

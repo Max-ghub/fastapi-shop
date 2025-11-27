@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base
+from app.db import Base
 
 
 class Product(Base):
@@ -18,11 +18,8 @@ class Product(Base):
     stock: Mapped[int] = mapped_column(Integer(), nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     category_id: Mapped[int | None] = mapped_column(
-        ForeignKey("categories.id", ondelete="SET NULL"),
-        nullable=True
+        ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(),
-        server_default=func.now(),
-        nullable=False
+        DateTime(), server_default=func.now(), nullable=False
     )
