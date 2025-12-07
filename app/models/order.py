@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db import Base
+from app.core.db import Base
 
 
 class Order(Base):
@@ -33,5 +33,5 @@ class OrderItem(Base):
     product_id: Mapped[int | None] = mapped_column(
         ForeignKey("products.id", ondelete="SET NULL"), nullable=True
     )
-    price_amount: Mapped[int] = mapped_column(Integer(), nullable=False)
+    price: Mapped[int] = mapped_column(Integer(), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer(), nullable=False)

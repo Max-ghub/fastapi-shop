@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db import Base
+from app.core.db import Base
 
 
 class ProductImage(Base):

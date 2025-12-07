@@ -7,10 +7,7 @@ from fastapi.responses import ORJSONResponse
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 
-from app.api.routers.auth import router as auth_router
-from app.api.routers.categories import router as categories_router
-from app.api.routers.media import router as media_router
-from app.api.routers.products import router as product_router
+from app.api.routers import router as api_routers
 from app.core.config import settings
 from app.core.metrics import setup_metrics
 
@@ -32,10 +29,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(lifespan=lifespan, default_response_class=ORJSONResponse)
-app.include_router(router=auth_router)
-app.include_router(router=product_router)
-app.include_router(router=categories_router)
-app.include_router(router=media_router)
+app.include_router(router=api_routers)
 
 
 @app.get("/health")

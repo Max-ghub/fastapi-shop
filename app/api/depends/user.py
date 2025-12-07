@@ -5,12 +5,20 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from starlette import status
 
-from app.api.depends import SessionDep
+from app.api.depends.db import SessionDep
 from app.core.security import decode_access_token
 from app.models import User
 from app.schemas.auth import TokenData
+from app.services import UserService
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def _get_user_service(db_session: SessionDep) -> UserService:
+    return UserService(db_session)
+
+
+UserServiceDep = Annotated[UserService, Depends(_get_user_service)]
 
 
 async def get_current_user(
@@ -57,4 +65,4 @@ def get_current_admin(current_user: CurrentUserDep) -> User:
 
 AdminUserDep = Annotated[User, Depends(get_current_admin)]
 
-__all__ = ["CurrentUserDep", "AdminUserDep"]
+__all__ = ["UserServiceDep", "CurrentUserDep", "AdminUserDep"]

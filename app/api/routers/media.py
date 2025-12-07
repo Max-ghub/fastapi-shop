@@ -11,7 +11,7 @@ from app.core.minio import get_minio_client
 from app.models import Product, ProductImage
 from app.schemas.product_image import ProductImageUploadResponse
 
-router = APIRouter(prefix="", tags=["media"])
+router = APIRouter(prefix="", tags=["products"])
 
 
 @router.post(
