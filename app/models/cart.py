@@ -1,5 +1,5 @@
 from sqlalchemy import ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
 
@@ -11,6 +11,7 @@ class Cart(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False
     )
+    items: Mapped[list["CartItem"]] = relationship(back_populates="cart")
 
 
 class CartItem(Base):
@@ -24,3 +25,4 @@ class CartItem(Base):
         ForeignKey("products.id", ondelete="SET NULL"), nullable=True
     )
     quantity: Mapped[int] = mapped_column(Integer(), nullable=False)
+    cart: Mapped["Cart"] = relationship(back_populates="items")
