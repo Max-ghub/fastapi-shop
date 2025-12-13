@@ -1,15 +1,21 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class CartItemRead(BaseModel):
+class ProductInCart(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    cart_id: int | None
-    product_id: int | None
+    name: str
+    price: int
+    stock: int
+    is_active: bool
     quantity: int
+
+class CartItemRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    quantity: int
+    product: ProductInCart
 
 
 class CartRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: int
     items: list[CartItemRead]
