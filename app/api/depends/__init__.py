@@ -1,3 +1,4 @@
+from app.api.depends.cart import CartServiceDep
 from app.api.depends.category import CategoryServiceDep
 from app.api.depends.db import SessionDep
 from app.api.depends.product import ProductServiceDep
@@ -12,4 +13,5 @@ __all__ = [
     "CategoryServiceDep",
     "ProductServiceDep",
     "ProductImageServiceDep",
+    "CartServiceDep",
 ]
