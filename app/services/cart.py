@@ -45,12 +45,17 @@ class CartService:
     async def add_cart_item(
         self, user: User, product_id: int, quantity: int
     ) -> CartItemRead:
-        cart = await self.repo.get_cart(user.id)
+        cart = await self.repo.get_cart(user.id, with_products=False)
         if cart is None:
             raise _not_found("Cart")
 
-        new_item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
-        created = await self.repo.add_item(new_item)
+        item = CartItem(
+            cart_id=cart.id,
+            product_id=product_id,
+            quantity=quantity,
+        )
+
+        created = await self.repo.add_item(item)
         return CartItemRead.model_validate(created)
 
     async def delete_cart_item(self, user: User, item_id: int) -> None:

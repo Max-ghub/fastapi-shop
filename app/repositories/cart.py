@@ -62,7 +62,14 @@ class CartRepository:
     async def add_item(self, item: CartItem) -> CartItem:
         self.db_session.add(item)
         await self.db_session.flush()
-        return item
+
+        stmt = (
+            select(CartItem)
+            .options(selectinload(CartItem.product))
+            .where(CartItem.id == item.id)
+        )
+        created = await self.db_session.scalar(stmt)
+        return created
 
     async def set_item_quantity(self, item: CartItem, quantity: int) -> CartItem:
         item.quantity = quantity
