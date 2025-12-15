@@ -8,7 +8,8 @@ from starlette import status
 from app.api.depends import AdminUserDep, SessionDep
 from app.core.config import settings
 from app.core.minio import get_minio_client
-from app.models import Product, ProductImage
+from app.models.product import Product
+from app.models.product_image import ProductImage
 from app.schemas.product_image import ProductImageUploadResponse
 
 router = APIRouter(prefix="", tags=["products"])
@@ -46,8 +47,7 @@ async def create_presigned_upload_url(
         is_main=False,
     )
     session.add(image)
-    await session.commit()
-    await session.refresh(image)
+    await session.flush()
 
     return ProductImageUploadResponse(
         object_key=image.object_key,

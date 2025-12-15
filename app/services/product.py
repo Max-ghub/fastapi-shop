@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.models import Product
+from app.models.product import Product
 from app.repositories import ProductRepository
 from app.schemas.products import ProductRead
 

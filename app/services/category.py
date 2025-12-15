@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Category
+from app.models.category import Category
 from app.repositories.category import CategoryRepository
 from app.schemas.categories import CategoryRead
 

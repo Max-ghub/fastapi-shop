@@ -3,7 +3,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Product
+from app.models.product import Product
 
 
 class ProductRepository:
@@ -51,14 +51,11 @@ class ProductRepository:
 
     async def save(self, product: Product) -> Product:
         self.db_session.add(product)
-        await self.db_session.commit()
-        await self.db_session.refresh(product)
+        await self.db_session.flush()
         return product
 
     async def update(self, product: Product, fields: dict[str, Any]) -> Product:
         for name, value in fields.items():
             setattr(product, name, value)
-
-        await self.db_session.commit()
-        await self.db_session.refresh(product)
+        await self.db_session.flush()
         return product

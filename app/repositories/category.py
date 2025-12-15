@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Category
+from app.models.category import Category
 
 
 class CategoryRepository:
@@ -16,6 +16,5 @@ class CategoryRepository:
 
     async def save(self, category: Category) -> Category:
         self.db_session.add(category)
-        await self.db_session.commit()
-        await self.db_session.refresh(category)
+        await self.db_session.flush()
         return category

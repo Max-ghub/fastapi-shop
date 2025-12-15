@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "fastapi-shop"
+name = "app"
 version = "0.1.0"
 description = "REST API shop (catalog, cart, orders, users)"
 authors = ["Max <max_artyukhin@mail.ru>"]

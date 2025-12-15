@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
+
+if TYPE_CHECKING:
+    from app.models.cart import CartItem
 
 
 class Product(Base):
@@ -23,3 +27,4 @@ class Product(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now(), nullable=False
     )
+    cart_items: Mapped[list["CartItem"]] = relationship(back_populates="product")

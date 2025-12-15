@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import ProductImage
+from app.models.product_image import ProductImage
 
 
 class ProductImageRepository:

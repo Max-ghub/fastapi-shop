@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.core.security import create_access_token, get_password_hash, verify_password
-from app.models import User
+from app.models.user import User
 from app.repositories import UserRepository
 from app.schemas.auth import Token
 from app.schemas.users import UserCreate, UserIn, UserOut

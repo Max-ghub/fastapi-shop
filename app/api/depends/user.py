@@ -7,7 +7,7 @@ from starlette import status
 
 from app.api.depends.db import SessionDep
 from app.core.security import decode_access_token
-from app.models import User
+from app.models.user import User
 from app.schemas.auth import TokenData
 from app.services import UserService
 

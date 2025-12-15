@@ -14,6 +14,15 @@ class ProductRead(BaseModel):
     category_id: int | None
 
 
+class ProductOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    price: int
+    stock: int
+    is_active: bool
+
+
 class ProductCreate(BaseModel):
     name: str
     slug: str
