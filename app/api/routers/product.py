@@ -13,7 +13,7 @@ from app.core.cache import (
     make_path_key_builder,
     make_query_key_builder,
 )
-from app.schemas.products import ProductCreate, ProductRead, ProductUpdate
+from app.schemas.products import ProductCreate, ProductRead, ProductUpdate, ProductList
 
 
 class ProductListFilters(BaseModel):
@@ -25,22 +25,31 @@ class ProductListFilters(BaseModel):
 
 router = APIRouter(prefix="/products", tags=["products"])
 
-products_list_key_builder = make_query_key_builder("products:list")
+products_list_key_builder = make_query_key_builder(
+    prefix="products:list"
+)
 product_detail_key_builder = make_path_key_builder(
-    "products:item", "product_id_or_slug"
+    prefix="products:item",
+    param_name="product_id_or_slug",
 )
 
 
-@router.get(path="", response_model=list[ProductRead], status_code=status.HTTP_200_OK)
-@cache(expire=30, key_builder=products_list_key_builder)
+@router.get(
+    path="",
+    response_model=ProductList,
+    status_code=status.HTTP_200_OK,
+)
+@cache(
+    expire=30,
+    key_builder=products_list_key_builder,
+)
 async def get_products(
     _request: Request,  # for key_builder
     _current_user: CurrentUserDep,
     service: ProductServiceDep,
     filters: Annotated[ProductListFilters, Depends()],
-) -> list[ProductRead]:
-    products = await service.get_products(**filters.model_dump())
-    return products
+) -> ProductList:
+    return await service.get_products(**filters.model_dump())
 
 
 @router.get(
@@ -48,46 +57,63 @@ async def get_products(
     response_model=ProductRead,
     status_code=status.HTTP_200_OK,
 )
-@cache(expire=60, key_builder=product_detail_key_builder)
+@cache(
+    expire=60,
+    key_builder=product_detail_key_builder,
+)
 async def get_product(
     _request: Request,  # for key_builder
     _current_user: CurrentUserDep,
     service: ProductServiceDep,
     product_id_or_slug: str,
 ) -> ProductRead:
-    product = await service.get_product(product_id_or_slug)
-    return product
+    return await service.get_product(product_id_or_slug)
 
 
 @router.post(
-    "",
+    path="",
     status_code=status.HTTP_201_CREATED,
     response_model=ProductRead,
 )
 async def create_product(
     _admin_user: AdminUserDep,
     service: ProductServiceDep,
-    data: ProductCreate,
+    payload: ProductCreate,
 ) -> ProductRead:
-    product = await service.create_product(**data.model_dump())
+    product = await service.create_product(payload.model_dump())
     await invalidate_list("products")
     return product
 
 
 @router.patch(
-    "/{product_id}", status_code=status.HTTP_200_OK, response_model=ProductRead
+    path="/{product_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ProductRead,
 )
 async def update_product(
     _admin_user: AdminUserDep,
     service: ProductServiceDep,
     product_id: int,
-    data: ProductUpdate,
+    payload: ProductUpdate,
 ) -> ProductRead:
-    old_product, updated_product = await service.update_product(
-        product_id, **data.model_dump(exclude_unset=True)
+    old_slug, updated_product = await service.update_product(
+        product_id, payload.model_dump(exclude_unset=True)
     )
     await invalidate_list("products")
     await invalidate_item(
-        "products", product_id, old_product.slug, updated_product.slug
+        "products", product_id, old_slug, updated_product.slug
     )
     return updated_product
+
+@router.delete(
+    path="/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_product(
+    _admin_user: AdminUserDep,
+    service: ProductServiceDep,
+    product_id: int,
+) -> None:
+    slug = await service.delete_product(product_id)
+    await invalidate_list("products")
+    await invalidate_item("products", product_id, slug)

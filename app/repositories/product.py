@@ -10,7 +10,17 @@ class ProductRepository:
     def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
-    async def list_products(
+    async def get_by_id_or_slug(self, product_id_or_slug: str) -> Product | None:
+        stmt = select(Product)
+
+        if product_id_or_slug.isdigit():
+            stmt = stmt.where(Product.id == int(product_id_or_slug))
+        else:
+            stmt = stmt.where(Product.slug == product_id_or_slug)
+
+        return await self.db_session.scalar(stmt)
+
+    async def get_list(
         self,
         *,
         category_id: int | None = None,
@@ -30,32 +40,19 @@ class ProductRepository:
 
         stmt = stmt.offset(offset).limit(limit)
         result = await self.db_session.scalars(stmt)
-        products = list(result.all())
-        return products
+        return list(result.all())
 
-    async def get_product_by_id(self, product_id: int) -> Product | None:
-        stmt = select(Product).where(Product.id == product_id)
-        product = await self.db_session.scalar(stmt)
-        return product
-
-    async def get_product_id_or_slug(self, product_id_or_slug: str) -> Product | None:
-        stmt = select(Product)
-
-        if product_id_or_slug.isdigit():
-            stmt = stmt.where(Product.id == int(product_id_or_slug))
-        else:
-            stmt = stmt.where(Product.slug == product_id_or_slug)
-
-        product = await self.db_session.scalar(stmt)
-        return product
-
-    async def save(self, product: Product) -> Product:
-        self.db_session.add(product)
+    async def update(self, product: Product, fields: dict[str, Any]) -> Product:
+        for key, value in fields.items():
+            setattr(product, key, value)
         await self.db_session.flush()
         return product
 
-    async def update(self, product: Product, fields: dict[str, Any]) -> Product:
-        for name, value in fields.items():
-            setattr(product, name, value)
+    async def delete(self, product: Product) -> None:
+        await self.db_session.delete(product)
+        await self.db_session.flush()
+
+    async def save(self, product: Product) -> Product:
+        self.db_session.add(product)
         await self.db_session.flush()
         return product

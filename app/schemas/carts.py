@@ -1,9 +1,9 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.products import ProductOut
+from app.schemas.products import ProductSummary
 
 
-class ItemInCart(ProductOut):
+class ItemInCart(ProductSummary):
     pass
 
 

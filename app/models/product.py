@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -12,12 +20,16 @@ if TYPE_CHECKING:
 
 class Product(Base):
     __tablename__ = "products"
+    __table_args__ = (
+        CheckConstraint(sqltext="price_minor >= 0", name="check_price_non_negative"),
+        CheckConstraint(sqltext="stock >= 0", name="check_stock_non_negative"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    price: Mapped[int] = mapped_column(Integer(), nullable=False)
+    price_minor: Mapped[int] = mapped_column(Integer(), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="RUB")
     stock: Mapped[int] = mapped_column(Integer(), nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)

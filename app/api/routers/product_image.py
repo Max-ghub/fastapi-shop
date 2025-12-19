@@ -1,20 +1,19 @@
 from fastapi import APIRouter, status
 
 from app.api.depends import CurrentUserDep, ProductImageServiceDep
-from app.schemas.product_image import ProductImageRead
+from app.schemas.product_image import ProductImageList
 
 router = APIRouter(prefix="/products", tags=["products"])
 
 
 @router.get(
     path="/{product_id}/images",
-    response_model=list[ProductImageRead],
+    response_model=ProductImageList,
     status_code=status.HTTP_200_OK,
 )
 async def get_product_images(
     _current_user: CurrentUserDep,
     service: ProductImageServiceDep,
     product_id: int,
-) -> list[ProductImageRead]:
-    images = await service.get_product_images(product_id)
-    return images
+) -> ProductImageList:
+    return await service.get_product_images(product_id)

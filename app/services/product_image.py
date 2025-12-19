@@ -3,10 +3,11 @@ from datetime import timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.exceptions import not_found
 from app.core.config import settings
 from app.core.minio import get_minio_client
 from app.repositories import ProductImageRepository, ProductRepository
-from app.schemas.product_image import ProductImageRead
+from app.schemas.product_image import ProductImageRead, ProductImageList
 
 
 class ProductImageService:
@@ -15,18 +16,15 @@ class ProductImageService:
         self.product_repo = ProductRepository(db_session)
         self.image_repo = ProductImageRepository(db_session)
 
-    async def get_product_images(self, product_id: int) -> list[ProductImageRead]:
-        product = await self.product_repo.get_product_by_id(product_id)
+    async def get_product_images(self, product_id: int) -> ProductImageList:
+        product = await self.product_repo.get_by_id_or_slug(str(product_id))
         if product is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Product not found",
-            )
+            raise not_found("Product")
 
         images = await self.image_repo.list_by_product_id(product_id)
 
         client = get_minio_client()
-        result: list[ProductImageRead] = []
+        items: list[ProductImageRead] = []
 
         for image in images:
             url = client.presigned_get_object(
@@ -34,8 +32,7 @@ class ProductImageService:
                 object_name=image.object_key,
                 expires=timedelta(minutes=10),
             )
-
-            result.append(
+            items.append(
                 ProductImageRead(
                     id=image.id,
                     object_key=image.object_key,
@@ -44,4 +41,4 @@ class ProductImageService:
                 )
             )
 
-        return result
+        return ProductImageList(items=items)
