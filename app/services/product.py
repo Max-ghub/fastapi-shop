@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.exceptions import not_found
 from app.models.product import Product
 from app.repositories import ProductRepository
-from app.schemas.products import ProductRead, ProductList
+from app.schemas.products import ProductList, ProductRead
 
 
 class ProductService:
@@ -13,7 +13,7 @@ class ProductService:
         self.db_session = db_session
         self.repo = ProductRepository(db_session)
 
-    async def _get_product(self, product_id_or_slug: int | str):
+    async def _get_product(self, product_id_or_slug: int | str) -> Product:
         product = await self.repo.get_by_id_or_slug(str(product_id_or_slug))
         if product is None:
             raise not_found("Product")

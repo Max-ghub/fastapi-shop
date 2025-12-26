@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.exceptions import conflict, not_found
 from app.models.cart import CartItem
+from app.models.product import Product
 from app.models.user import User
 from app.repositories.cart import CartRepository
 from app.schemas.carts import CartItemRead, CartItemUpdate, CartRead
@@ -34,16 +35,27 @@ class CartService:
     async def add_cart_item(
         self, user: User, product_id: int, quantity: int
     ) -> CartItemRead:
+        if quantity <= 0:
+            raise conflict("Quantity must be positive")
+
+        product = await self.db_session.get(Product, product_id)
+        if product is None:
+            raise not_found("Product")
+        if quantity > product.stock:
+            raise conflict("Not enough stock")
+
         cart = await self.repo.get_cart(user.id, with_products=False)
         if cart is None:
             raise not_found("Cart")
 
-        item = CartItem(
-            cart_id=cart.id,
-            product_id=product_id,
-            quantity=quantity,
+        existing = await self.repo.get_item_by_cart_product(
+            cart.id, product_id, with_product=True
         )
+        if existing is not None:
+            updated = await self.repo.set_item_quantity(existing, quantity)
+            return CartItemRead.model_validate(updated)
 
+        item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
         created = await self.repo.add_item(item)
         return CartItemRead.model_validate(created)
 

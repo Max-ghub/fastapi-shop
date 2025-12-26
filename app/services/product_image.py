@@ -1,13 +1,12 @@
 from datetime import timedelta
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.exceptions import not_found
 from app.core.config import settings
 from app.core.minio import get_minio_client
 from app.repositories import ProductImageRepository, ProductRepository
-from app.schemas.product_image import ProductImageRead, ProductImageList
+from app.schemas.product_image import ProductImageList, ProductImageRead
 
 
 class ProductImageService:

@@ -29,8 +29,14 @@ class CategoryService:
 
         try:
             created = await self.repo.save(category)
-        except IntegrityError:
-            raise conflict("Category already exists") from None
+        except IntegrityError as e:
+            sqlstate = getattr(getattr(e, "orig", None), "pgcode", None)
+
+            if sqlstate == "23505":
+                raise conflict("Category already exists") from None
+            if sqlstate == "23503":
+                raise conflict("Parent category does not exist") from None
+            raise
 
         return CategoryRead.model_validate(created)
 

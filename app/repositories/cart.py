@@ -59,6 +59,19 @@ class CartRepository:
         stmt = _item_stmt(with_product=with_product).where(CartItem.id == item_id)
         return await self.db_session.scalar(stmt)
 
+    async def get_item_by_cart_product(
+        self,
+        cart_id: int,
+        product_id: int,
+        *,
+        with_product: bool = True,
+    ) -> CartItem | None:
+        stmt = _item_stmt(with_product=with_product).where(
+            CartItem.cart_id == cart_id,
+            CartItem.product_id == product_id,
+        )
+        return await self.db_session.scalar(stmt)
+
     async def add_item(self, item: CartItem) -> CartItem:
         self.db_session.add(item)
         await self.db_session.flush()
@@ -78,4 +91,9 @@ class CartRepository:
 
     async def delete_item(self, item: CartItem) -> None:
         await self.db_session.delete(item)
+        await self.db_session.flush()
+
+    async def delete_all(self, cart: Cart) -> None:
+        for item in cart.items:
+            await self.db_session.delete(item)
         await self.db_session.flush()

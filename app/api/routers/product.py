@@ -13,7 +13,7 @@ from app.core.cache import (
     make_path_key_builder,
     make_query_key_builder,
 )
-from app.schemas.products import ProductCreate, ProductRead, ProductUpdate, ProductList
+from app.schemas.products import ProductCreate, ProductList, ProductRead, ProductUpdate
 
 
 class ProductListFilters(BaseModel):
@@ -25,9 +25,7 @@ class ProductListFilters(BaseModel):
 
 router = APIRouter(prefix="/products", tags=["products"])
 
-products_list_key_builder = make_query_key_builder(
-    prefix="products:list"
-)
+products_list_key_builder = make_query_key_builder(prefix="products:list")
 product_detail_key_builder = make_path_key_builder(
     prefix="products:item",
     param_name="product_id_or_slug",
@@ -100,10 +98,9 @@ async def update_product(
         product_id, payload.model_dump(exclude_unset=True)
     )
     await invalidate_list("products")
-    await invalidate_item(
-        "products", product_id, old_slug, updated_product.slug
-    )
+    await invalidate_item("products", product_id, old_slug, updated_product.slug)
     return updated_product
+
 
 @router.delete(
     path="/{product_id}",

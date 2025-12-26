@@ -1,10 +1,6 @@
-from enum import StrEnum
-
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class Currency(StrEnum):
-    RUB = "RUB"
+from app.domain.enums import CurrencyEnum
 
 
 class ProductBase(BaseModel):
@@ -12,7 +8,7 @@ class ProductBase(BaseModel):
     slug: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
     price_minor: int = Field(ge=0)
-    currency: Currency = Currency.RUB
+    currency: CurrencyEnum = CurrencyEnum.RUB
     stock: int = Field(ge=0)
     is_active: bool = False
     category_id: int | None = None
@@ -27,7 +23,7 @@ class ProductUpdate(BaseModel):
     slug: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
     price_minor: int | None = Field(default=None, ge=0)
-    currency: Currency | None = None
+    currency: CurrencyEnum | None = None
     stock: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
     category_id: int | None = None
@@ -40,7 +36,7 @@ class ProductRead(BaseModel):
     slug: str
     description: str | None
     price_minor: int
-    currency: Currency
+    currency: CurrencyEnum
     stock: int
     is_active: bool
     category_id: int | None

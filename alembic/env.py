@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from logging.config import fileConfig
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context  # type: ignore
+from app.core.config import settings
 from app.core.db import Base
 
 config = context.config
@@ -27,9 +27,9 @@ target_metadata = Base.metadata
 
 
 def _alembic_url() -> str:
-    url = os.getenv("DATABASE_DSN")
+    url = settings.postgres_dsn
     if not url:
-        raise RuntimeError("DATABASE_DSN is not set")
+        raise RuntimeError("POSTGRES_DSN is not set")
     return url
 
 

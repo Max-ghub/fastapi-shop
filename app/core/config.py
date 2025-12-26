@@ -7,8 +7,8 @@ class Settings(BaseSettings):  # type: ignore[misc]
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",
         env_ignore_empty=True,
-        extra="forbid",
     )
 
     # App
@@ -18,7 +18,7 @@ class Settings(BaseSettings):  # type: ignore[misc]
     log_level: Literal["debug", "info", "warning", "error"] = "info"
 
     # DSN
-    database_dsn: str
+    postgres_dsn: str
     redis_dsn: str
     rabbitmq_dsn: str
     celery_broker_dsn: str
